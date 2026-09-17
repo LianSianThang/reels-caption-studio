@@ -1,0 +1,23 @@
+[Unit]
+Description=Reel Caption Studio - AI Subtitle Studio (1GB VPS Optimized)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/var/www/reels-caption-studio
+ExecStart=/var/www/reels-caption-studio/backend/.venv/bin/uvicorn backend.app.main:app --host 127.0.0.1 --port 8000 --workers 1
+Restart=always
+RestartSec=5
+
+# Environment variables
+Environment="PYTHONUNBUFFERED=1"
+Environment="ENVIRONMENT=production"
+Environment="TRUSTED_PROXIES=127.0.0.1,::1"
+
+# Memory protection for 1GB VPS (restart automatically if exceeds 400MB)
+MemoryMax=450M
+MemoryHigh=380M
+
+[Install]
+WantedBy=multi-user.target

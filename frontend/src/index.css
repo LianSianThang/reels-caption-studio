@@ -1,0 +1,21 @@
+/* Custom fonts styling */
+@font-face {
+  font-family: 'Myanmar Text';
+  src: local('Myanmar Text');
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0D1117;
+}
+::-webkit-scrollbar-thumb {
+  background: #21262D;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #30363D;
+}

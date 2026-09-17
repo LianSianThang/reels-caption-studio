@@ -1,0 +1,60 @@
+[
+  {
+    "id": 0,
+    "start": 0.0,
+    "end": 4.2,
+    "text": "I went to Yangon yesterday and something really strange happened.",
+    "words": [
+      {
+        "text": "I",
+        "start": 0.02,
+        "end": 0.18
+      },
+      {
+        "text": "went",
+        "start": 0.18,
+        "end": 0.38
+      },
+      {
+        "text": "to",
+        "start": 0.38,
+        "end": 0.52
+      },
+      {
+        "text": "Yangon",
+        "start": 0.52,
+        "end": 1.02
+      },
+      {
+        "text": "yesterday",
+        "start": 1.02,
+        "end": 1.62
+      },
+      {
+        "text": "and",
+        "start": 1.62,
+        "end": 1.82
+      },
+      {
+        "text": "something",
+        "start": 1.82,
+        "end": 2.22
+      },
+      {
+        "text": "really",
+        "start": 2.22,
+        "end": 2.54
+      },
+      {
+        "text": "strange",
+        "start": 2.54,
+        "end": 3.06
+      },
+      {
+        "text": "happened.",
+        "start": 3.06,
+        "end": 3.62
+      }
+    ]
+  }
+]
