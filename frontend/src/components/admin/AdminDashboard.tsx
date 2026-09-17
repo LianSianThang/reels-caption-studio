@@ -161,7 +161,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
-  const handleManualCleanup = async (days = 3.0) => {
+  const handleManualCleanup = async (hours = 12.0) => {
     const token = localStorage.getItem("reel_admin_token");
     if (!token) return;
 
@@ -175,14 +175,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ days })
+        body: JSON.stringify({ hours })
       });
+      if (!res.ok) {
+        const errText = await res.text();
+        let errMsg = "Cleanup failed";
+        try {
+          const json = JSON.parse(errText);
+          errMsg = json.detail || json.message || errMsg;
+        } catch {
+          errMsg = errText || errMsg;
+        }
+        throw new Error(errMsg);
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Cleanup failed");
 
       setActionMsg({
         type: "success",
-        text: `Successfully purged ${data.deleted_count} files older than ${days} days, freeing ${data.reclaimed_mb} MB!`
+        text: `Successfully purged ${data.deleted_count} files older than ${hours} hours, freeing ${data.reclaimed_mb} MB!`
       });
       // Refresh metrics
       fetchAdminData();
@@ -192,6 +202,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       setCleanupLoading(false);
     }
   };
+
 
   const handlePurgeUserFiles = async (userId: number, username: string) => {
     if (!confirm(`Are you sure you want to delete all uploaded and processed files for ${username}?`)) return;
@@ -361,7 +372,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <Clock className="w-4 h-4 text-blue-400" />
               </div>
               <div className="text-2xl font-bold text-blue-400">
-                3 Days <span className="text-sm font-sans font-normal text-gray-400">(72h)</span>
+                12 Hours <span className="text-sm font-sans font-normal text-gray-400">(Auto)</span>
               </div>
               <div className="text-[11px] text-gray-400 mt-2 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
@@ -376,25 +387,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Database className="w-4 h-4 text-amber-400" />
-                  <span>3-Day Data Retention & Purge Hub</span>
+                  <span>12-Hour Data Retention & Purge Hub</span>
                 </h3>
                 <p className="text-xs text-gray-400 mt-1">
-                  Uploaded files and burned outputs older than 3 days are purged automatically every hour. You can also trigger an immediate purge manually.
+                  Uploaded files and burned outputs older than 12 hours are purged automatically every hour. You can also trigger an immediate purge manually.
                 </p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <button
-                  onClick={() => handleManualCleanup(3.0)}
+                  onClick={() => handleManualCleanup(12.0)}
                   disabled={cleanupLoading}
                   className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-semibold text-xs flex items-center gap-2 transition disabled:opacity-50 shadow-lg shadow-amber-500/20"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>{cleanupLoading ? "Cleaning..." : "Run 3-Day Cleanup Now"}</span>
+                  <span>{cleanupLoading ? "Cleaning..." : "Run 12-Hour Cleanup Now"}</span>
                 </button>
               </div>
             </div>
           </div>
+
 
           {/* Global Gemini API Key & Rate Limit Hub */}
           <div className="bg-[#141926] border border-gray-800 rounded-2xl p-5">

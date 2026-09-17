@@ -3,7 +3,8 @@ import time
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+
 from backend.app.core.config import settings
 from backend.app.core.database import (
     get_expired_media_files,
@@ -14,14 +15,22 @@ from backend.app.core.database import (
 
 class CleanupService:
     @staticmethod
-    def cleanup_expired_files(hours: float = 12.0) -> Dict[str, Any]:
+    def cleanup_expired_files(hours: Optional[float] = None, days: Optional[float] = None) -> Dict[str, Any]:
         """
-        Deletes files older than `hours` (default: 12 hours) 
+        Deletes files older than specified retention (default: 12 hours) 
         from both database records and physical disk in uploads/ and outputs/.
         """
+        if hours is not None:
+            effective_hours = float(hours)
+        elif days is not None:
+            effective_hours = float(days) * 24.0
+        else:
+            effective_hours = float(settings.AUTO_CLEANUP_HOURS)
+
         deleted_count = 0
         reclaimed_bytes = 0
-        cutoff_timestamp = time.time() - (hours * 3600)
+        cutoff_timestamp = time.time() - (effective_hours * 3600)
+
 
 
         # 1. Check DB expired records

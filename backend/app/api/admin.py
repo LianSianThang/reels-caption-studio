@@ -34,7 +34,9 @@ class AdminLoginRequest(BaseModel):
     password: str
 
 class ManualCleanupRequest(BaseModel):
-    days: float = 3.0
+    days: Optional[float] = None
+    hours: Optional[float] = None
+
 
 def get_directory_size_mb(path: Path) -> float:
     if not path.exists():
@@ -177,14 +179,16 @@ def list_users(admin_user: dict = Depends(require_admin)):
 
 @router.post("/cleanup")
 def trigger_cleanup(req: ManualCleanupRequest, admin_user: dict = Depends(require_admin)):
-    """Manually triggers purging of files older than specified days (default 3.0 days)."""
-    res = CleanupService.cleanup_expired_files(days=req.days)
+    """Manually triggers purging of files older than specified hours or days."""
+    res = CleanupService.cleanup_expired_files(hours=req.hours, days=req.days)
+    label = f"{req.hours}h" if req.hours is not None else (f"{req.days} days" if req.days is not None else f"{settings.AUTO_CLEANUP_HOURS} hours")
     return {
         "status": "success",
-        "message": f"Purged {res['deleted_count']} files older than {req.days} days.",
+        "message": f"Purged {res['deleted_count']} files older than {label}.",
         "deleted_count": res["deleted_count"],
         "reclaimed_mb": res["reclaimed_mb"]
     }
+
 
 @router.post("/users/{user_id}/purge")
 def purge_user_data(user_id: int, admin_user: dict = Depends(require_admin)):
