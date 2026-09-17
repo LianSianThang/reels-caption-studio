@@ -12,12 +12,14 @@ interface VideoUploaderProps {
   onUploadSuccess: (meta: VideoMetadata) => void;
   isUploading: boolean;
   setIsUploading: (val: boolean) => void;
+  onRequireAuth?: () => void;
 }
 
 export const VideoUploader: React.FC<VideoUploaderProps> = ({
   onUploadSuccess,
   isUploading,
   setIsUploading,
+  onRequireAuth,
 }) => {
   const [activeTab, setActiveTab] = useState<"file" | "youtube">("file");
   const [youtubeUrl, setYoutubeUrl] = useState("");
@@ -30,8 +32,16 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
   };
 
   const handleFile = async (file: File) => {
+    const token = localStorage.getItem("reel_user_token");
+    if (!token) {
+      setError("Please sign in or create an account before uploading videos.");
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+
     setError(null);
     setIsUploading(true);
+
 
     const formData = new FormData();
     formData.append("file", file);
@@ -61,8 +71,16 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     e.preventDefault();
     if (!youtubeUrl.trim()) return;
 
+    const token = localStorage.getItem("reel_user_token");
+    if (!token) {
+      setError("Please sign in or create an account before importing YouTube videos.");
+      if (onRequireAuth) onRequireAuth();
+      return;
+    }
+
     setError(null);
     setIsUploading(true);
+
 
     try {
       const res = await fetch("/api/import-youtube", {

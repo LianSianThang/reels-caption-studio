@@ -161,10 +161,19 @@ async def upload_video(
 ):
     """
     Uploads a video using chunked streaming with OOM memory protection.
+    Requires user authentication to prevent anonymous orphaned file storage.
     Caps max file size directly during stream and validates video format before storage.
     """
+    user = await get_current_user_optional(authorization)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Please sign in or create an account before uploading videos."
+        )
+
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename required.")
+
 
     ext = Path(file.filename).suffix.lower()
     if ext not in [".mp4", ".mov", ".mkv", ".webm"]:
@@ -256,12 +265,18 @@ async def import_youtube_video(
     req: YouTubeImportRequest,
     authorization: Optional[str] = Header(None)
 ):
-    """Imports YouTube/Shorts video with anti-SSRF verification and 3-day retention."""
+    """Imports YouTube/Shorts video with anti-SSRF verification and 12-hour retention."""
+    user = await get_current_user_optional(authorization)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Please sign in or create an account before importing YouTube videos."
+        )
+
     url = req.url.strip()
     validate_youtube_url(url)
+    user_id = user["id"]
 
-    user = await get_current_user_optional(authorization)
-    user_id = user["id"] if user else None
 
     try:
         meta = await YouTubeService.import_video(url, user_id=user_id)
@@ -467,3 +482,34 @@ async def stream_video(filename: str):
     ext = file_path.suffix.lower()
     media_type = "video/mp4" if ext == ".mp4" else ("video/webm" if ext == ".webm" else "application/octet-stream")
     return FileResponse(file_path, media_type=media_type)
+
+@router.delete("/video/{video_id}")
+async def delete_video_project(
+    video_id: str,
+    user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Deletes an uploaded video and all companion generated files (mp3, srt, ass, burned mp4)
+    from the server disk immediately to free up storage space.
+    """
+    validate_filename(video_id)
+    deleted_count = 0
+    reclaimed_bytes = 0
+
+    for folder in [settings.UPLOAD_DIR, settings.OUTPUT_DIR]:
+        for f in folder.glob(f"{video_id}*"):
+            if f.exists() and f.is_file() and not f.name.startswith("demo_reel"):
+                try:
+                    reclaimed_bytes += f.stat().st_size
+                    f.unlink()
+                    deleted_count += 1
+                except Exception:
+                    pass
+
+    return {
+        "status": "deleted",
+        "video_id": video_id,
+        "deleted_files": deleted_count,
+        "freed_mb": round(reclaimed_bytes / (1024 * 1024), 2)
+    }
+

@@ -9,9 +9,11 @@ import { AuthModal } from "./components/auth/AuthModal";
 import { AdminLoginModal } from "./components/admin/AdminLoginModal";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
 import type { VideoMetadata, SubtitleSegment, StyleSettings } from "./types/subtitle";
-import { Sparkles, Mic, Globe, Film, PlayCircle, Loader2 } from "lucide-react";
+import { Sparkles, Mic, Globe, Film, PlayCircle, Loader2, Trash2 } from "lucide-react";
+import { API_BASE_URL } from "./config";
 
 export function App() {
+
   // Authentication State
   const [user, setUser] = useState<any>(null);
   const [adminUser, setAdminUser] = useState<any>(null);
@@ -137,7 +139,26 @@ export function App() {
     }
   };
 
+  const handleDeleteCurrentVideo = async () => {
+    if (!metadata) return;
+    if (metadata.video_id !== "demo_reel") {
+      const confirmDelete = window.confirm("Delete this video from the server to free storage space?");
+      if (!confirmDelete) return;
+      try {
+        await fetch(`${API_BASE_URL}/api/video/${metadata.video_id}`, {
+          method: "DELETE",
+          headers: getAuthHeader(),
+        });
+      } catch (e) {
+        console.error("Failed to delete video:", e);
+      }
+    }
+    setMetadata(null);
+    setSegments([]);
+  };
+
   // Load Pre-generated Demo Reel
+
   const handleLoadDemo = async () => {
     try {
       setStatusMsg("Loading demo vertical reel...");
@@ -354,6 +375,7 @@ export function App() {
                   }}
                   isUploading={isUploading}
                   setIsUploading={setIsUploading}
+                  onRequireAuth={() => setIsAuthOpen(true)}
                 />
                 
                 <div className="text-center">
@@ -382,16 +404,29 @@ export function App() {
                     </p>
                   </div>
 
-                  <button
-                    onClick={() => {
-                      setMetadata(null);
-                      setSegments([]);
-                    }}
-                    className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
-                  >
-                    Change Video
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {metadata.video_id !== "demo_reel" && (
+                      <button
+                        onClick={handleDeleteCurrentVideo}
+                        title="Delete video and purge files from server"
+                        className="text-xs text-rose-400 hover:text-rose-300 px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 flex items-center gap-1.5 transition"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete Reel</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setMetadata(null);
+                        setSegments([]);
+                      }}
+                      className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+                    >
+                      Close Video
+                    </button>
+                  </div>
                 </div>
+
 
                 {/* 3 Step Action Workflow Buttons */}
                 <div className="grid grid-cols-3 gap-3 pt-1">

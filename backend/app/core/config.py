@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     # Limits & Retention Tuning for 1GB VPS
     MAX_UPLOAD_SIZE_MB: int = 200
     MAX_YOUTUBE_DURATION_SEC: int = 300  # 5 mins max for shorts/reels
-    AUTO_CLEANUP_HOURS: int = 72         # 3 days automatic purge
+    AUTO_CLEANUP_HOURS: int = 12         # 12 hours automatic purge (storage optimization)
     FFMPEG_THREADS: int = 1              # 1 thread to prevent OOM on 1GB VPS
     
     class Config:

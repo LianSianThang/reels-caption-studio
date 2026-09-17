@@ -1,4 +1,4 @@
-﻿import os
+import os
 import time
 import asyncio
 from datetime import datetime
@@ -14,14 +14,15 @@ from backend.app.core.database import (
 
 class CleanupService:
     @staticmethod
-    def cleanup_expired_files(days: float = 3.0) -> Dict[str, Any]:
+    def cleanup_expired_files(hours: float = 12.0) -> Dict[str, Any]:
         """
-        Deletes files older than `days` (default: 3 days / 72 hours) 
+        Deletes files older than `hours` (default: 12 hours) 
         from both database records and physical disk in uploads/ and outputs/.
         """
         deleted_count = 0
         reclaimed_bytes = 0
-        cutoff_timestamp = time.time() - (days * 86400)
+        cutoff_timestamp = time.time() - (hours * 3600)
+
 
         # 1. Check DB expired records
         expired_records = get_expired_media_files()
@@ -122,13 +123,14 @@ class CleanupService:
 
     @classmethod
     async def start_retention_worker(cls):
-        """Background loop running every 1 hour to enforce the 3-day file retention policy."""
+        """Background loop running every 1 hour to enforce the 12-hour file retention policy."""
         while True:
             try:
-                res = cls.cleanup_expired_files(days=3.0)
+                res = cls.cleanup_expired_files(hours=float(settings.AUTO_CLEANUP_HOURS))
                 if res["deleted_count"] > 0:
-                    print(f"[3-Day Retention Worker] Cleaned {res['deleted_count']} expired files, freed {res['reclaimed_mb']} MB.")
+                    print(f"[12-Hour Retention Worker] Cleaned {res['deleted_count']} expired files, freed {res['reclaimed_mb']} MB.")
             except Exception as e:
-                print(f"[3-Day Retention Worker Error] {e}")
+                print(f"[12-Hour Retention Worker Error] {e}")
             # Wait 1 hour between sweeps
             await asyncio.sleep(3600)
+
