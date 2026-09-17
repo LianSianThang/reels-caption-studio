@@ -1,4 +1,4 @@
-﻿import os
+import os
 import uuid
 import asyncio
 from pathlib import Path
@@ -20,9 +20,20 @@ class YouTubeService:
             "quiet": True,
             "no_warnings": True,
             "noplaylist": True,
+            "extractor_args": {
+                "youtube": {
+                    "player_client": ["android", "ios"]
+                }
+            },
             # Limit download rate or size to avoid exhausting VPS memory/disk
             "max_filesize": settings.MAX_UPLOAD_SIZE_MB * 1024 * 1024,
         }
+
+        # Optional cookie support if cookies.txt is provided in data folder
+        cookie_file = settings.DATA_DIR / "cookies.txt"
+        if cookie_file.exists():
+            ydl_opts["cookiefile"] = str(cookie_file)
+
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             # First extract info to check duration
